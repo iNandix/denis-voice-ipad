@@ -1,0 +1,37 @@
+workflows:
+  ios-denis-voice:
+    name: Denis Voice iPad App
+    environment:
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Set up keychain
+        script: |
+          keychain initialize
+      - name: Fetch signing files
+        script: |
+          app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_STORE
+      - name: Use system default keychain
+        script: |
+          keychain add-certificates
+      - name: Install dependencies
+        script: |
+          cd $CM_BUILD_DIR
+          swift package resolve
+      - name: Build iOS app
+        script: |
+          cd $CM_BUILD_DIR
+          xcodebuild build -project DenisVoice.xcodeproj -scheme DenisVoice -configuration Release -destination generic/platform=iOS -archivePath $CM_BUILD_DIR/build/DenisVoice.xcarchive archive
+      - name: Export IPA
+        script: |
+          cd $CM_BUILD_DIR
+          xcodebuild -exportArchive -archivePath $CM_BUILD_DIR/build/DenisVoice.xcarchive -exportOptionsPlist export_options.plist -exportPath $CM_BUILD_DIR/build/ipa
+    artifacts:
+      - build/ipa/*.ipa
+      - build/ipa/*.dSYM.zip
+    publishing:
+      app_store_connect:
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        submit_to_testflight: true
