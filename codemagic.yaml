@@ -37,8 +37,6 @@ workflows:
         working_directory: apps/ipad-thin-client
         script: |
           cd ios/App
-          xcodebuild -list 2>&1 | head -20
-          echo "---BUILDING---"
           xcodebuild \
             -scheme App \
             -configuration Release \
@@ -49,26 +47,13 @@ workflows:
             CODE_SIGNING_ALLOWED=NO \
             PRODUCT_BUNDLE_IDENTIFIER=so.denis.voice.client \
             ONLY_ACTIVE_ARCH=NO \
-            -destination 'generic/platform=iOS' 2>&1 | tail -30
-      - name: Package IPA
-        working_directory: apps/ipad-thin-client/ios/App
-        script: |
-          echo "=== Searching for .app ==="
-          find . -name "*.app" -type d 2>/dev/null
-          echo "=== build dirs ==="
-          find build -type d 2>/dev/null | head -30
-          APP_PATH=$(find . -name "*.app" -type d 2>/dev/null | head -1)
-          if [ -z "$APP_PATH" ]; then
-            echo "ERROR: no .app found"
-            exit 1
-          fi
-          echo "Found app: $APP_PATH"
-          APP_NAME=$(basename "$APP_PATH")
-          cd "$(dirname "$APP_PATH")"
+            -destination 'generic/platform=iOS'
+          # Package IPA
+          cd build/Build/Products/Release-iphoneos
           mkdir -p Payload
-          cp -r "$APP_NAME" Payload/
+          cp -r App.app Payload/
           zip -r ../../../../DenisVoice.ipa Payload
-          echo "IPA created: $(ls -la ../../../../DenisVoice.ipa)"
+          echo "IPA: $(ls -la ../../../../DenisVoice.ipa)"
     artifacts:
       - apps/ipad-thin-client/DenisVoice.ipa
     publishing:
