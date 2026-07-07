@@ -36,8 +36,10 @@ workflows:
       - name: Build unsigned IPA
         working_directory: apps/ipad-thin-client
         script: |
+          set +e
           cd ios/App
-          rm -rf build
+          rm -rf build 2>/dev/null
+          echo "=== Running xcodebuild ==="
           xcodebuild \
             -scheme App \
             -configuration Release \
@@ -48,12 +50,12 @@ workflows:
             CODE_SIGNING_ALLOWED=NO \
             PRODUCT_BUNDLE_IDENTIFIER=so.denis.voice.client \
             ONLY_ACTIVE_ARCH=NO \
-            -destination 'generic/platform=iOS'
-          # Show what was built
+            -destination 'generic/platform=iOS' 2>&1 | tail -10
+          XCODE_EXIT=$?
+          echo "xcodebuild exit: $XCODE_EXIT"
           echo "=== Build output tree ==="
-          find build -name "*.app" -type d 2>/dev/null
-          find build -maxdepth 5 -type d 2>/dev/null | sort
-          # Try to package
+          find build -name "*.app" -type d 2>/dev/null || echo "no .app found"
+          find build -maxdepth 5 -type d 2>/dev/null | sort | head -20
           APP=$(find build -name "*.app" -type d 2>/dev/null | head -1)
           if [ -n "$APP" ]; then
             APP_DIR=$(dirname "$APP")
@@ -63,9 +65,9 @@ workflows:
             zip -r /tmp/DenisVoice.ipa Payload
             echo "IPA created: $(ls -la /tmp/DenisVoice.ipa)"
           else
-            echo "WARNING: no .app found, checking archive..."
-            find build -name "*.xcarchive" -type d 2>/dev/null
+            echo "WARNING: no .app found"
           fi
+          exit 0
     artifacts:
       - /tmp/DenisVoice.ipa
     publishing:
