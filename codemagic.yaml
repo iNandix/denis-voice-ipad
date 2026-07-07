@@ -62,14 +62,15 @@ workflows:
             cd "$APP_DIR"
             mkdir -p Payload
             cp -r "$(basename "$APP")" Payload/
-            zip -r /tmp/DenisVoice.ipa Payload
-            echo "IPA created: $(ls -la /tmp/DenisVoice.ipa)"
+            IPA_PATH="$FCI_BUILD_DIR/DenisVoice.ipa"
+            zip -r "$IPA_PATH" Payload
+            echo "IPA created: $(ls -la "$IPA_PATH")"
           else
             echo "WARNING: no .app found"
           fi
           exit 0
     artifacts:
-      - /tmp/DenisVoice.ipa
+      - DenisVoice.ipa
     publishing:
       email:
         recipients:
