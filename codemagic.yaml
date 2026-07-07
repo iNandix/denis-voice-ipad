@@ -36,13 +36,11 @@ workflows:
       - name: Build unsigned IPA
         working_directory: apps/ipad-thin-client/ios/App
         script: |
-          if [ -d "App.xcworkspace" ]; then
-            WORKSPACE="-workspace App.xcworkspace"
-          else
-            WORKSPACE="-project App.xcodeproj"
-          fi
+          set -x
+          ls -la App.xcodeproj/ 2>/dev/null || echo "no xcodeproj"
+          ls -la App.xcworkspace/ 2>/dev/null || echo "no xcworkspace"
           xcodebuild \
-            $WORKSPACE \
+            -project App.xcodeproj \
             -scheme App \
             -configuration Release \
             -sdk iphoneos \
@@ -50,7 +48,8 @@ workflows:
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            PRODUCT_BUNDLE_IDENTIFIER=so.denis.voice.client
+            PRODUCT_BUNDLE_IDENTIFIER=so.denis.voice.client \
+            ONLY_ACTIVE_ARCH=NO 2>&1 | tail -20
       - name: Package IPA
         working_directory: apps/ipad-thin-client/ios/App
         script: |
