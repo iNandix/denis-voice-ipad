@@ -34,13 +34,12 @@ workflows:
           npx cap add ios
           cp /tmp/Info.plist.bak ios/App/App/Info.plist 2>/dev/null || true
       - name: Build unsigned IPA
-        working_directory: apps/ipad-thin-client/ios/App
+        working_directory: apps/ipad-thin-client
         script: |
-          set -x
-          ls -la App.xcodeproj/ 2>/dev/null || echo "no xcodeproj"
-          ls -la App.xcworkspace/ 2>/dev/null || echo "no xcworkspace"
+          cd ios/App
+          xcodebuild -list 2>&1 | head -20
+          echo "---BUILDING---"
           xcodebuild \
-            -project App.xcodeproj \
             -scheme App \
             -configuration Release \
             -sdk iphoneos \
@@ -49,7 +48,8 @@ workflows:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             PRODUCT_BUNDLE_IDENTIFIER=so.denis.voice.client \
-            ONLY_ACTIVE_ARCH=NO 2>&1 | tail -20
+            ONLY_ACTIVE_ARCH=NO \
+            -destination 'generic/platform=iOS' 2>&1 | tail -30
       - name: Package IPA
         working_directory: apps/ipad-thin-client/ios/App
         script: |
