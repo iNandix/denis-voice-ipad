@@ -37,6 +37,7 @@ workflows:
         working_directory: apps/ipad-thin-client
         script: |
           cd ios/App
+          rm -rf build
           xcodebuild \
             -scheme App \
             -configuration Release \
