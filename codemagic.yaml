@@ -53,10 +53,19 @@ workflows:
       - name: Package IPA
         working_directory: apps/ipad-thin-client/ios/App
         script: |
-          cd build/Build/Products/Release-iphoneos
+          find build -name "*.app" -type d 2>/dev/null
+          APP_PATH=$(find build -name "*.app" -type d | head -1)
+          if [ -z "$APP_PATH" ]; then
+            echo "ERROR: no .app found"
+            find build -type d | head -20
+            exit 1
+          fi
+          echo "Found app: $APP_PATH"
+          cd "$(dirname "$APP_PATH")"
           mkdir -p Payload
-          cp -r App.app Payload/
+          cp -r "$(basename "$APP_PATH")" Payload/
           zip -r ../../../../DenisVoice.ipa Payload
+          echo "IPA created: $(ls -la ../../../../DenisVoice.ipa)"
     artifacts:
       - apps/ipad-thin-client/DenisVoice.ipa
     publishing:
