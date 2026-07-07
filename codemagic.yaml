@@ -37,7 +37,7 @@ workflows:
         working_directory: apps/ipad-thin-client
         script: |
           cd ios/App
-          rm -rf build
+          rm -rf build ~/Library/Developer/Xcode/DerivedData/App-* 2>/dev/null
           xcodebuild \
             -scheme App \
             -configuration Release \
@@ -49,14 +49,27 @@ workflows:
             PRODUCT_BUNDLE_IDENTIFIER=so.denis.voice.client \
             ONLY_ACTIVE_ARCH=NO \
             -destination 'generic/platform=iOS'
+          # Find the .app
+          APP_PATH=$(find build -name "*.app" -type d 2>/dev/null | head -1)
+          echo "APP_PATH=$APP_PATH"
+          if [ -z "$APP_PATH" ]; then
+            echo "FAIL: no .app found"
+            find build -type d 2>/dev/null | head -20
+            exit 1
+          fi
           # Package IPA
-          cd build/Build/Products/Release-iphoneos
+          APP_DIR=$(dirname "$APP_PATH")
+          APP_NAME=$(basename "$APP_PATH")
+          cd "$APP_DIR"
           mkdir -p Payload
-          cp -r App.app Payload/
-          zip -r ../../../../../../DenisVoice.ipa Payload
-          echo "IPA: $(ls -la ../../../../../../DenisVoice.ipa)"
+          cp -r "$APP_NAME" Payload/
+          # Place IPA at repo root for artifact upload
+          zip -r /tmp/DenisVoice.ipa Payload
+          # Also copy to expected artifact path
+          cp /tmp/DenisVoice.ipa "$CM_BUILD_DIR/DenisVoice.ipa" 2>/dev/null || true
+          ls -la /tmp/DenisVoice.ipa
     artifacts:
-      - apps/ipad-thin-client/DenisVoice.ipa
+      - /tmp/DenisVoice.ipa
     publishing:
       email:
         recipients:
