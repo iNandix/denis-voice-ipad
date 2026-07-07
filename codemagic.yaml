@@ -29,8 +29,10 @@ workflows:
       - name: Capacitor setup iOS
         working_directory: apps/ipad-thin-client
         script: |
-          rm -rf ios/App/App.xcodeproj ios/App/App.xcworkspace 2>/dev/null
-          npx cap add ios 2>/dev/null || npx cap sync ios
+          cp ios/App/App/Info.plist /tmp/Info.plist.bak 2>/dev/null || true
+          rm -rf ios
+          npx cap add ios
+          cp /tmp/Info.plist.bak ios/App/App/Info.plist 2>/dev/null || true
       - name: Pod install
         working_directory: apps/ipad-thin-client/ios/App
         script: pod install || true
