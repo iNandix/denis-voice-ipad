@@ -36,8 +36,13 @@ workflows:
       - name: Build unsigned IPA
         working_directory: apps/ipad-thin-client/ios/App
         script: |
+          if [ -d "App.xcworkspace" ]; then
+            WORKSPACE="-workspace App.xcworkspace"
+          else
+            WORKSPACE="-project App.xcodeproj"
+          fi
           xcodebuild \
-            -workspace App.xcworkspace \
+            $WORKSPACE \
             -scheme App \
             -configuration Release \
             -sdk iphoneos \
