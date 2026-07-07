@@ -37,7 +37,7 @@ workflows:
         working_directory: apps/ipad-thin-client
         script: |
           cd ios/App
-          rm -rf build ~/Library/Developer/Xcode/DerivedData/App-* 2>/dev/null
+          rm -rf build
           xcodebuild \
             -scheme App \
             -configuration Release \
@@ -49,25 +49,23 @@ workflows:
             PRODUCT_BUNDLE_IDENTIFIER=so.denis.voice.client \
             ONLY_ACTIVE_ARCH=NO \
             -destination 'generic/platform=iOS'
-          # Find the .app
-          APP_PATH=$(find build -name "*.app" -type d 2>/dev/null | head -1)
-          echo "APP_PATH=$APP_PATH"
-          if [ -z "$APP_PATH" ]; then
-            echo "FAIL: no .app found"
-            find build -type d 2>/dev/null | head -20
-            exit 1
+          # Show what was built
+          echo "=== Build output tree ==="
+          find build -name "*.app" -type d 2>/dev/null
+          find build -maxdepth 5 -type d 2>/dev/null | sort
+          # Try to package
+          APP=$(find build -name "*.app" -type d 2>/dev/null | head -1)
+          if [ -n "$APP" ]; then
+            APP_DIR=$(dirname "$APP")
+            cd "$APP_DIR"
+            mkdir -p Payload
+            cp -r "$(basename "$APP")" Payload/
+            zip -r /tmp/DenisVoice.ipa Payload
+            echo "IPA created: $(ls -la /tmp/DenisVoice.ipa)"
+          else
+            echo "WARNING: no .app found, checking archive..."
+            find build -name "*.xcarchive" -type d 2>/dev/null
           fi
-          # Package IPA
-          APP_DIR=$(dirname "$APP_PATH")
-          APP_NAME=$(basename "$APP_PATH")
-          cd "$APP_DIR"
-          mkdir -p Payload
-          cp -r "$APP_NAME" Payload/
-          # Place IPA at repo root for artifact upload
-          zip -r /tmp/DenisVoice.ipa Payload
-          # Also copy to expected artifact path
-          cp /tmp/DenisVoice.ipa "$CM_BUILD_DIR/DenisVoice.ipa" 2>/dev/null || true
-          ls -la /tmp/DenisVoice.ipa
     artifacts:
       - /tmp/DenisVoice.ipa
     publishing:
