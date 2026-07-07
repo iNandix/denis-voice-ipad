@@ -33,9 +33,6 @@ workflows:
           rm -rf ios
           npx cap add ios
           cp /tmp/Info.plist.bak ios/App/App/Info.plist 2>/dev/null || true
-      - name: Pod install
-        working_directory: apps/ipad-thin-client/ios/App
-        script: pod install || true
       - name: Build unsigned IPA
         working_directory: apps/ipad-thin-client/ios/App
         script: |
